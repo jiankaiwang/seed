@@ -2,9 +2,9 @@
  * github : https://github.com/jiankaiwang/DetailScience
  * classification : C#
  * description : compute md5 hash code and checksum between two strings
- * Used Example :
+ * Example to verify checksum :
  * --------------------------------------------------
-// method.1
+// method.1 
 MD5HashChecksum md5obj1 = new MD5HashChecksum("str1", "str1");
 Console.WriteLine(String.Format("Hash compare between two strings is {0}.", md5obj1.VerifyMd5Hash().ToString()));
 
@@ -20,6 +20,17 @@ Console.WriteLine(String.Format("Hash compare between two strings is {0}.", md5o
 MD5HashChecksum md5obj4 = new MD5HashChecksum();
 MD5 newMd5Obj = MD5.Create();
 Console.WriteLine(String.Format("Hash compare between two strings is {0}.", md5obj4.VerifyMd5Hash(newMd5Obj, "str1", "str1").ToString()));
+ * --------------------------------------------------
+ * Example to get MD5 hash code :
+ * --------------------------------------------------
+// method.1
+MD5HashChecksum md5obj1 = new MD5HashChecksum();
+String getHashCode = md5obj1.getMD5HashCode("str1");
+
+// method.2
+MD5HashChecksum md5obj2 = new MD5HashChecksum();
+MD5 newMd5Obj = MD5.Create();
+String getHashCode = md5obj2.getMD5HashCode(newMd5Obj, "str1");
  * --------------------------------------------------
  */
 
