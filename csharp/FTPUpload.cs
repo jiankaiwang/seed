@@ -34,7 +34,14 @@ class FTPUpload
     /*
     * constructor
     * parameter :
-    * 1. use ftp user, user password, full upload path and full local path
+		* 1. getFTPuser : ftp user name
+		* 2. getFTPPwd : user password
+		* 3. getFTPFullUpdPath : upload file path on ftp server
+		* 4. getFTPFullLocalPath : local file for upload
+		* 5. getDataString : string data type for upload
+		* 6. getCSFlag : do checksum flag
+		* 7. getReTryCount : count of retrying to upload
+		* 8. getUploadFromFile : the data content is from file or from string		
     */
     public FTPUpload(String getFTPuser, String getFTPPwd, String getFTPFullUpdPath, String getFTPFullLocalPath)
     {
