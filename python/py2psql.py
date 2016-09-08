@@ -228,8 +228,8 @@ class py2psql:
 			paraListItem = []
 			for item in paraList:
 				paraListItem.append(item + "= %s ")
+				dataTuple += (getParams[item],)
 			updateStr += ' , '.join(paraListItem)
-			dataTuple += (getParams[item],)
 		else:
 			return retStatus
 			
@@ -239,8 +239,8 @@ class py2psql:
 			condListItem = []
 			for item in condList:
 				condListItem.append(item + "= %s ")
+				dataTuple += (getConds[item],)
 			updateStr += ' and '.join(condListItem)
-			dataTuple += (getConds[item],)
 		else:
 			return retStatus
 		
