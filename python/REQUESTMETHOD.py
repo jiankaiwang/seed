@@ -174,9 +174,9 @@ class SENDREQUEST:
 #   u'method': u'GET'
 # }
 #
-a = SENDREQUEST("http://192.168.2.5/test/index.php", {}, {"method" : "get"}, "GET")
-a.response()["response"]
-print json.loads(a.response()["response"])
+#a = SENDREQUEST("http://192.168.2.5/test/index.php", {}, {"method" : "get"}, "GET")
+#a.response()["response"]
+#print json.loads(a.response()["response"])
 
 # post example
 # ret : {
@@ -195,9 +195,9 @@ print json.loads(a.response()["response"])
 #   u'method': u'POST'
 # }
 #
-a = SENDREQUEST("http://192.168.2.5/test/index.php", {"Authorization" : "api-key"}, {"method" : "post"},"POST")
-a.response()["response"]
-print json.loads(a.response()["response"])
+#a = SENDREQUEST("http://192.168.2.5/test/index.php", {"Authorization" : "api-key"}, {"method" : "post"},"POST")
+#a.response()["response"]
+#print json.loads(a.response()["response"])
 
 # put example
 # ret : {
@@ -216,9 +216,9 @@ print json.loads(a.response()["response"])
 #   u'method': u'PUT'
 # }
 #
-a = SENDREQUEST("http://192.168.2.5/test/index.php", {"Authorization" : "api-key"}, {"method" : "put"},"PUT")
-a.response()["response"]
-print json.loads(a.response()["response"])
+#a = SENDREQUEST("http://192.168.2.5/test/index.php", {"Authorization" : "api-key"}, {"method" : "put"},"PUT")
+#a.response()["response"]
+#print json.loads(a.response()["response"])
 
 # delete example
 # ret : {
@@ -237,9 +237,9 @@ print json.loads(a.response()["response"])
 #     u'method': u'DELETE'
 # }
 # 
-a = SENDREQUEST("http://192.168.2.5/test/index.php", {}, {"method" : "delete"},"DELETE")
-a.response()["response"]
-print json.loads(a.response()["response"])
+#a = SENDREQUEST("http://192.168.2.5/test/index.php", {}, {"method" : "delete"},"DELETE")
+#a.response()["response"]
+#print json.loads(a.response()["response"])
 
 
 
