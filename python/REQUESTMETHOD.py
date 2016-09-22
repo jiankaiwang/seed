@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # author : jiankaiwang (https://welcome-jiankaiwang.rhcloud.com/)
 # project : seed (https://github.com/jiankaiwang/seed)
@@ -37,6 +38,15 @@ class SENDREQUEST:
             for key, value in self.__addHeader.iteritems():
                 retReq.add_header(key, value)
         return retReq
+        
+    #
+    # desc : transform to str for urllib.urlencode
+    #
+    def __uft82str(self):
+        newData = {}
+        for k, v in self.__jsonData.iteritems():
+            newData[k] = unicode(v).encode('utf-8')
+        return newData
 
     #
     # desc : GET method
@@ -78,7 +88,7 @@ class SENDREQUEST:
             # begin post request
             opener = urllib2.build_opener(urllib2.HTTPHandler)
             # notice before posting, data must be urlencoded
-            request = urllib2.Request(self.__url, urllib.urlencode(self.__jsonData))
+            request = urllib2.Request(self.__url, urllib.urlencode(self.__uft82str()))
             request.get_method = lambda:"POST"
             # add header
             request = self.__addHeaderBody(request)
@@ -104,7 +114,7 @@ class SENDREQUEST:
             opener = urllib2.build_opener(urllib2.HTTPHandler)
             if jsonUrlecnoding:
                 # json as encoding
-                request = urllib2.Request(self.__url, urllib.urlencode(self.__jsonData))                
+                request = urllib2.Request(self.__url, urllib.urlencode(self.__uft82str()))                
             else:
                 # json as string 
                 request = urllib2.Request(self.__url, data=json.dumps(self.__jsonData))
