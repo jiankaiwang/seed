@@ -42,7 +42,7 @@ class SENDREQUEST:
     #
     # desc : transform to str for urllib.urlencode
     #
-    def __uft82str(self):
+    def __unicode2utf8(self):
         newData = {}
         for k, v in self.__jsonData.iteritems():
             newData[k] = unicode(v).encode('utf-8')
@@ -88,7 +88,7 @@ class SENDREQUEST:
             # begin post request
             opener = urllib2.build_opener(urllib2.HTTPHandler)
             # notice before posting, data must be urlencoded
-            request = urllib2.Request(self.__url, urllib.urlencode(self.__uft82str()))
+            request = urllib2.Request(self.__url, urllib.urlencode(self.__unicode2utf8()))
             request.get_method = lambda:"POST"
             # add header
             request = self.__addHeaderBody(request)
@@ -114,7 +114,7 @@ class SENDREQUEST:
             opener = urllib2.build_opener(urllib2.HTTPHandler)
             if jsonUrlecnoding:
                 # json as encoding
-                request = urllib2.Request(self.__url, urllib.urlencode(self.__uft82str()))                
+                request = urllib2.Request(self.__url, urllib.urlencode(self.__unicode2utf8()))                
             else:
                 # json as string 
                 request = urllib2.Request(self.__url, data=json.dumps(self.__jsonData))
