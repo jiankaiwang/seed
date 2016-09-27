@@ -130,7 +130,7 @@ class PHP2MySQL {
 
         try {
             $dbh = new PDO(
-                'mysql:dbname='.$this -> db.';host='.$this -> url,
+                'mysql:dbname='.$this -> db.';host='.$this -> url.';port='.$this -> port,
                 $this -> user,
                 $this -> pwd,
                 array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'')
@@ -169,7 +169,7 @@ class PHP2MySQL {
         if(count(array_keys($getInsertData)) > 0) {
             try {
                 $dbh = new PDO(
-                    'mysql:dbname='.$this -> db.';host='.$this -> url,
+                    'mysql:dbname='.$this -> db.';host='.$this -> url.';port='.$this -> port,
                     $this -> user,
                     $this -> pwd,
                     array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'')
@@ -207,7 +207,7 @@ class PHP2MySQL {
 
             try {
                 $dbh = new PDO(
-                    'mysql:dbname='.$this -> db.';host='.$this -> url,
+                    'mysql:dbname='.$this -> db.';host='.$this -> url.';port='.$this -> port,
                     $this -> user,
                     $this -> pwd,
                     array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'')
@@ -246,7 +246,7 @@ class PHP2MySQL {
 
             try {
                 $dbh = new PDO(
-                    'mysql:dbname='.$this -> db.';host='.$this -> url,
+                    'mysql:dbname='.$this -> db.';host='.$this -> url.';port='.$this -> port,
                     $this -> user,
                     $this -> pwd,
                     array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'')
