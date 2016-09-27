@@ -31,7 +31,7 @@ class PHP2MySQL {
     private function retStatus($getState, $getInfo, $getData) {
         $this -> status["state"] = $getState;
         $this -> status["info"] = $getInfo;
-        $this -> status["data"] = $getData[0];
+        $this -> status["data"] = $getData;
     }
 
     #
@@ -321,26 +321,26 @@ class PHP2MySQL {
 #+---------+-------------+------+-----+---------+----------------+
 
 # select example
-$obj = new PHP2MySQL("localhost","3306","test","cityData","test01","test01"); 
-$getRes = $obj -> select(array("country"), array("name" => "shanghai"));
-echo "select : ".$getRes["state"]." ".$getRes["info"]."<br>";
-foreach($getRes["data"] as $key => $value) {
-    echo $key."->".$value."<br>";
-}
+#$obj = new PHP2MySQL("localhost","3306","test","cityData","test01","test01"); 
+#$getRes = $obj -> select(array("country"), array("name" => "shanghai"));
+#echo "select : ".$getRes["state"]." ".$getRes["info"]."<br>";
+#foreach($getRes["data"][0] as $key => $value) {
+#    echo $key."->".$value."<br>";
+#}
 
 # insert example
-$obj = new PHP2MySQL("localhost","3306","test","cityData","test01","test01");
-$getRes = $obj -> insert(array("name" => "New York", "country" => "U.S.A."));
-echo "insert : ".$getRes["state"]." ".$getRes["info"]."<br>";
+#$obj = new PHP2MySQL("localhost","3306","test","cityData","test01","test01");
+#$getRes = $obj -> insert(array("name" => "New York", "country" => "U.S.A."));
+#echo "insert : ".$getRes["state"]." ".$getRes["info"]."<br>";
 
 # delete example
-$obj = new PHP2MySQL("localhost","3306","test","cityData","test01","test01");
-$getRes = $obj -> execdelete(array("name" => "New York"));
-echo "delete : ".$getRes["state"]." ".$getRes["info"]."<br>";
+#$obj = new PHP2MySQL("localhost","3306","test","cityData","test01","test01");
+#$getRes = $obj -> execdelete(array("name" => "New York"));
+#echo "delete : ".$getRes["state"]." ".$getRes["info"]."<br>";
 
 # update example
-$obj = new PHP2MySQL("localhost","3306","test","cityData","test01","test01");
-$getRes = $obj -> update(array("country" => "China"), array("name" => "shanghai"));
-echo "update : ".$getRes["state"]." ".$getRes["info"]."<br>";
+#$obj = new PHP2MySQL("localhost","3306","test","cityData","test01","test01");
+#$getRes = $obj -> update(array("country" => "China"), array("name" => "shanghai"));
+#echo "update : ".$getRes["state"]." ".$getRes["info"]."<br>";
 
 ?>
