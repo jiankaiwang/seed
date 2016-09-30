@@ -7,7 +7,9 @@
 # coding: utf-8
 
 import urllib2
+import json
 import requests
+import TEXTCODING
 
 #
 # desc : request as GET/POST/PUT/DELETE
@@ -60,7 +62,7 @@ class SENDREQUEST:
     def __post(self):
         try:
             # begin post request
-            req = requests.post(self.__url, data=self.__jsonData, headers=self.__addHeader)
+            req = requests.post(self.__url, json = TEXTCODING.unicode2utf8FromDict(self.__jsonData), headers = self.__addHeader)
             self.__response = req.text
             self.__state = 0
         except urllib2.HTTPError as e:
@@ -80,10 +82,10 @@ class SENDREQUEST:
         try:
             # begin put or delete request
             if self.__method == "put":
-                req = requests.put(self.__url, data = self.__jsonData, headers = self.__addHeader) 
+                req = requests.put(self.__url, json = TEXTCODING.unicode2utf8FromDict(self.__jsonData), headers = self.__addHeader) 
                 self.__response = req.text
             elif self.__method == "delete":
-                req = requests.delete(self.__url, data = self.__jsonData, headers = self.__addHeader)
+                req = requests.delete(self.__url, headers = self.__addHeader)
                 self.__response = req.text
             self.__state = 0
         except urllib2.HTTPError as e:
