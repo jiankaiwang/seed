@@ -272,6 +272,52 @@ class PHP2MySQL {
         return $this -> status;
     }
 
+    #
+    # desc : advanced and combined sql command
+    # param@sqlCmd : sql command, e.g. 
+    # select dm.*, dp.dept_name 
+    #   from dept_manager as dm left 
+    #     outer join departments as dp on dm.dept_no = dp.dept_no 
+    #   where dm.from_date > '1990-01-01'
+    #   order by dm.from_date asc;
+    # param@existRetData ( is there returned data ? ) : true (yes, select), false (no, insert, delete, update)
+    # param@paramDataArray ( parameter-based array for sql ) : e.g. '1990-01-01' is replaced by :from_date, array(':from_date' => $_POST['fd'])
+    #
+    public function execsql($sqlCmd, $existRetData, $paramDataArray) {
+      if(strlen($sqlCmd) > 0 and is_bool($existRetData) and is_array($paramDataArray)) {
+        try {
+          $dbh = new PDO(
+            'mysql:dbname='.$this -> db.';host='.$this -> url.';port='.$this -> port,
+            $this -> user,
+            $this -> pwd,
+            array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'')
+          );
+
+          $sth = $dbh -> prepare($sqlCmd);
+
+          if($sth->execute($paramDataArray)) {
+            try {
+              $retData = array();
+              if($existRetData) {
+                $retData = $sth -> fetchAll(PDO::FETCH_ASSOC);
+              }
+              $this -> retStatus("success", "complete", $retData);
+            } catch (Exception $e) {
+              $this -> retStatus("failure", $e -> getMessage(), array());
+            }
+          } else {
+            $this -> retStatus("failure", "execution error", array());
+          }
+        } catch (Exception $e) {
+          $this -> retStatus("failure", $e -> getMessage(), array());
+        }
+      } else {
+        # parameters do not meet the requirement
+        $this -> retStatus("failure", "Passed parameters did not meet the standard.", array());
+      }
+      return $this -> status;
+    }
+
     # 
     # desc : constructor
     #
@@ -320,6 +366,12 @@ class PHP2MySQL {
 #| country | varchar(75) | YES  |     | NULL    |                |
 #+---------+-------------+------+-----+---------+----------------+
 
+# returned sample
+# $getRes = 
+#   "state" : "success" or "falure"
+#   "info" : message for execution
+#   "data" : for select and get data as array data type
+
 # select example
 #$obj = new PHP2MySQL("localhost","3306","test","cityData","test01","test01"); 
 #$getRes = $obj -> select(array("country"), array("name" => "shanghai"));
@@ -343,4 +395,16 @@ class PHP2MySQL {
 #$getRes = $obj -> update(array("country" => "China"), array("name" => "shanghai"));
 #echo "update : ".$getRes["state"]." ".$getRes["info"]."<br>";
 
+# execsql example (advanced)
+# only this execsql can not passed table name at the beginning of object created
+#$obj = new PHP2MySQL("localhost","3306","employees","","test01","test01");
+#$getRes = $obj -> execsql(
+#  "select dm.*, dp.dept_name from dept_manager as dm left outer join departments as dp on dm.dept_no = dp.dept_no where dm.from_date > :from_date order by dm.from_date asc;",
+#  True,
+#  array(':from_date' => '1990-01-01')
+#);
+#echo "select : ".$getRes["state"]." ".$getRes["info"]."<br>";
+#foreach($getRes["data"][0] as $key => $value) {
+#    echo $key."->".$value."<br>";
+#}
 ?>
