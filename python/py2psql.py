@@ -10,386 +10,620 @@
 # link to postgresql database
 # p2l = py2psql("127.0.0.1","5432","ckan_default","public.user","ckan_default","ckan")
 #
+# get table schema
+# p2l = py2psql("127.0.0.1","5432","ckan_default","public.user","ckan_default","ckan")
+# p2l.getTableSchema()  # default table
+# p2l2 = py2psql("127.0.0.1","5432","ckan_default","","ckan_default","ckan")
+# p2l2.getTableSchema("public.user")  # desired table
+# p2l.status()
+#
 # query data and select column name, email, 123 (not existing)
+# data = p2l.select({where},[columns])
 # data = p2l.select({"name":"test114"},["name","email","123"])
 # data = p2l.select({"name":"test114"},[])
 #
 # query data and select column name, email, 123 (not existing) and also returned as dictionary
+# data = p2l.select({where},[columns],asdict=True)
 # data = p2l.select({"name":"test114"},["name","email","123"],asdict=True)
 # data = p2l.select({"name":"test114"},[],asdict=True)
 #
 # update data
+# p2l.update({set},{where})
 # p2l.update({"email":"test@tw"},{"name":"test114"})
 #
 # insert data
+# p2l.insert({ data })
 # p2l.insert({ "id" : "acbdhcbdh-abchdbch", "name":"123","email":"123@tw" })
 #
 # delete data
+# p2l.delete({where})
 # p2l.delete({"name":"test1", "email":"test1@tw"})
+#
+# execsql data
+# create object without assign table
+# p2l.execsql("sql command", is there returned value, {parameter : value})
+# p2l.execsql("select * from public.user where name = %(name)s;", True, {'name' : "test114"}, True)
+# p2l.status()
 #
 
 import psycopg2
 
 class py2psql:
-	
-	# private member
-	# host : URL or IP
-	# port : postgresql server port
-	# db : as a string
-	# tb : as a string
-	# user : as a string
-	# pwd : as a string
-	# data : as a dictionary, { colName : colValue }
-	# columns : save table schema
-	# datatype : save column data tpye { "col" : { "type" : "code", "null" : "True/False" } }
-	__host = ""
-	__port = ""
-	__db = ""
-	__tb = ""
-	__user = ""
-	__pwd = ""
-	__columns = []
-	__datatype = {}
+    
+    # private member
+    # host : URL or IP
+    # port : postgresql server port
+    # db : as a string
+    # tb : as a string
+    # user : as a string
+    # pwd : as a string
+    # data : as a dictionary, { colName : colValue }
+    # columns : save table schema
+    # datatype : save column data tpye { "col" : { "type" : "code", "null" : "True/False" } }
+    # retStatus : returned data as a dictionary
+    __host = ""
+    __port = ""
+    __db = ""
+    __tb = ""
+    __user = ""
+    __pwd = ""
+    __columns = []
+    __datatype = {}
+    __retStatus = { }
 
-	# constructor
-	def __init__(self, getHost, getPort, getDB, getTB, getUser, getPwd):
-		self.__host = getHost
-		self.__port = getPort
-		self.__db = getDB
-		self.__tb = getTB
-		self.__user = getUser
-		self.__pwd = getPwd
-		self.__columns = []
-		self.__datatype = {}
+    #
+    # desc : constructor
+    # param@getTB : can be null when only using execsql()
+    #
+    def __init__(self, getHost, getPort, getDB, getTB, getUser, getPwd):
+        self.__host = getHost
+        self.__port = getPort
+        self.__db = getDB
+        self.__tb = getTB
+        self.__user = getUser
+        self.__pwd = getPwd
+        self.__columns = []
+        self.__datatype = {}
+        self.__retStatus = { "state" : 0, "data" : {}, "info" : "" }
 
-		# fetch column information
-		self.__tableSchema()
-			
-	# define server DSN
-	def __serverDSN(self):
-		conStr = ["host=" + self.__host, "port=" + self.__port, "dbname=" + self.__db, "user=" + self.__user , "password=" + self.__pwd]
-		return ' '.join(conStr)
+        # fetch column information
+        if len(getTB) > 0:
+            self.__tableSchema()
 
-	# get table schema
-	def __tableSchema(self):
-		# Connect to an existing database
-		conn = psycopg2.connect(self.__serverDSN())
-		
-		# Open a cursor to perform database operations
-		cur = conn.cursor()
+    # ------------------------
+    # private member
+    # ------------------------            
+    #
+    # desc : define server DSN
+    # retn : string
+    #
+    def __serverDSN(self):
+        conStr = ["host=" + self.__host, "port=" + self.__port, "dbname=" + self.__db, "user=" + self.__user , "password=" + self.__pwd]
+        return ' '.join(conStr)
 
-		# select sql
-		selectStr = "select * from " + self.__tb
+    #
+    # desc : get table schema
+    # retn : None
+    #
+    def __tableSchema(self):
+        # Connect to an existing database
+        conn = psycopg2.connect(self.__serverDSN())
+        
+        # Open a cursor to perform database operations
+        cur = conn.cursor()
 
-		cur.execute(selectStr)
-		
-		# get columns
-		self.__columns = [desc[0] for desc in cur.description]
+        # select sql
+        selectStr = "select * from " + self.__tb
 
-		# close communication
-		cur.close()
-		conn.close()
+        cur.execute(selectStr)
+        
+        # get columns
+        self.__columns = [desc[0] for desc in cur.description]
 
-	# get table colunm data type
-	def __tableColDatatype(self):
-		# Connect to an existing database
-		conn = psycopg2.connect(self.__serverDSN())
-		
-		# Open a cursor to perform database operations
-		cur = conn.cursor()
+        # close communication
+        cur.close()
+        conn.close()
 
-		# select sql
-		selectStr = "select * from " + self.__tb
+    #
+    # desc : get table colunm data type
+    # retn : column data type in the table
+    #
+    def __tableColDatatype(self):
+        # Connect to an existing database
+        conn = psycopg2.connect(self.__serverDSN())
+        
+        # Open a cursor to perform database operations
+        cur = conn.cursor()
 
-		cur.execute(selectStr)
-		
-		# get column data type
-		for item in cur.description:
-			self.__datatype.setdefault(item[0], { "type" : item[1] , "null" : item[6] })
-		
-		# close communication
-		cur.close()
-		conn.close()
+        # select sql
+        selectStr = "select * from " + self.__tb
 
-		return self.__datatype
-		
-		
-	# get col index in the column order
-	def __getColIndex(self, getColName):
-		if getColName in self.__columns:
-			return self.__columns.index(getColName)
-		else:
-			return -1
-		
-	# select operation
-	# getConds{} : defined where SQL conditions
-	# getParams [] : selected column names, empty : means all
-	# asdict : returned row as dictionary data type
-	def select(self, getConds, getParams, asdict=False):
-		# filter the column value
-		colSelected = "*"
-		colList = []
-		retdata = []
-		dataTuple = ()
-		
-		# check column existing
-		if len(getParams) > 0:
-			for item in getParams:		
-				if self.__getColIndex(item) > -1:
-					colList.append(item)
-		
-		# set selected columns
-		if len(colList) > 0:
-			colSelected = ','.join(colList)
-								
-		# Connect to an existing database
-		conn = psycopg2.connect(self.__serverDSN())
-		
-		# Open a cursor to perform database operations
-		cur = conn.cursor()
+        cur.execute(selectStr)
+        
+        # get column data type
+        for item in cur.description:
+            self.__datatype.setdefault(item[0], { "type" : item[1] , "null" : item[6] })
+        
+        # close communication
+        cur.close()
+        conn.close()
 
-		# select sql
-		selectStr = "select " + colSelected + " from " + self.__tb
+        return self.__datatype
+        
+        
+    #
+    # desc : get col index in the column order
+    # retn : -1 (None) or Number
+    #
+    def __getColIndex(self, getColName):
+        if getColName in self.__columns:
+            return self.__columns.index(getColName)
+        else:
+            return -1
 
-		if len(getConds.keys()) > 0:
-			selectStr += " where "
-			item = 0
-			for key, value in getConds.iteritems():
-				if item != 0:
-					selectStr += " and "
-				selectStr += str(key) + "= %s "
-				item += 1
-				dataTuple += (value,)
-		selectStr += ";"												
+    #
+    # desc : set returned status
+    # retn : None
+    #
+    def __setStatus(self, getStatus, getInfo, getData):
+        self.__retStatus["state"] = getStatus
+        self.__retStatus["data"] = getData
+        self.__retStatus["info"] = getInfo
 
-		# parameter-based select sql
-		cur.execute(selectStr, dataTuple)
+    #
+    # desc : get column description on the execution pointer
+    # param@getCur : a psycopg2 connect cursor
+    # param@curIndex : index on the cursor description
+    # retn : [] data type
+    #
+    def __getCurDesc(self, getCur, curIndex):
+        curInfo = [desc[curIndex] for desc in getCur.description]
+        return curInfo
 
-		# get all data	
-		rawdata = cur.fetchall()
-		
-		# modify data to customized type
-		if asdict:
-			if len(colList) > 0:
-				for pair in rawdata:
-					tmpDict = {}
-					for item in range(0,len(pair),1):
-						tmpDict.setdefault(colList[item],pair[item])
-					retdata.append(tmpDict)
-			else:
-				for pair in rawdata:
-					tmpDict = {}
-					for item in range(0,len(pair),1):
-						tmpDict.setdefault(self.__columns[item],pair[item])
-					retdata.append(tmpDict)
-		else:
-			retdata = rawdata
+    # ------------------------
+    # public member
+    # ------------------------  
+                
+    #
+    # desc : returned status
+    # retn : return executing status
+    #
+    def status(self):
+        return self.__retStatus
+    
+    #
+    # desc : get table schema
+    # param@getTable : get desired table schema
+    # retn : status object
+    #
+    def getTableSchema(self, getTable=None):    
+        if self.__tb == "" and getTable == None:
+            self.__setStatus("failure","There is no table assigned.",{})
+        elif self.__tb != "" and getTable == None:
+            try:
+                self.__tableSchema()
+                self.__setStatus("success","Get the table schema.", self.__columns)
+            except:
+                self.__setStatus("failure","Can not get the table schema.", self.__columns)
+        elif getTable != None:
+            # Connect to an existing database
+            conn = psycopg2.connect(self.__serverDSN())
+        
+            # Open a cursor to perform database operations
+            cur = conn.cursor()
 
-		# close communication
-		cur.close()
-		conn.close()											 
+            # select sql
+            selectStr = "select * from " + getTable
 
-		return retdata
+            try:
+                cur.execute(selectStr)
+        
+                # get columns
+                getColName = [desc[0] for desc in cur.description]
+                self.__setStatus("success","Get the table schema.", getColName)
+            except:
+                self.__setStatus("failure","Can not get the table schema.", {})
 
-	# update operation
-	# getParams : {}, set sql parameters	
-	# getConds : {}, where sql conditions
-	def update(self, getParams, getConds):
-		# 0 : failure, 1 : success
-		retStatus = 1
-	
-		# filter the column value
-		paraKeys = getParams.keys()
-		condKeys = getConds.keys()
-		paraList = []
-		condList = []
-		dataTuple = ()
-		
-		# check parameter existing
-		if len(paraKeys) > 0:
-			for item in paraKeys:	 
-				if self.__getColIndex(item) > -1:
-					paraList.append(item)
-		else:
-			return retStatus
-		
-		# check condition existing
-		if len(condKeys) > 0:
-			for item in condKeys:	 
-				if self.__getColIndex(item) > -1:
-					condList.append(item)
-		else:
-			return retStatus
-
-		# update sql
-		updateStr = "update " + self.__tb + " set "
-		
-		if len(paraList) > 0:
-			paraListItem = []
-			for item in paraList:
-				paraListItem.append(item + "= %s ")
-				dataTuple += (getParams[item],)
-			updateStr += ' , '.join(paraListItem)
-		else:
-			return retStatus
-			
-		updateStr += " where "
-
-		if len(condList) > 0:
-			condListItem = []
-			for item in condList:
-				condListItem.append(item + "= %s ")
-				dataTuple += (getConds[item],)
-			updateStr += ' and '.join(condListItem)
-		else:
-			return retStatus
-		
-		updateStr += ";"					 
-
-		# Connect to an existing database
-		conn = psycopg2.connect(self.__serverDSN())
-		
-		# Open a cursor to perform database operations
-		cur = conn.cursor()	 
-
-		# parameter-based update sql
-		cur.execute(updateStr, dataTuple)
-
-		# get all data	
-		conn.commit()
-
-		# close communication
-		cur.close()
-		conn.close()											 
-
-		return retStatus		
-		
-	# insert operation
-	# getParams : {}, value sql parameters	
-	def insert(self, getParams):
-		# 0 : failure, 1 : success
-		retStatus = 1
-	
-		# filter the column value
-		paraKeys = getParams.keys()
-		paraList = []
-		insertedData = ()
-		
-		# check parameter existing
-		if len(paraKeys) > 0:
-			for item in paraKeys:	 
-				if self.__getColIndex(item) > -1:
-					paraList.append(item)
-		else:
-			return retStatus
-			
-		# insert string
-		insertStr = "insert into " + self.__tb + " ("
-		
-		for index in range(0,len(paraList),1):
-			if index != 0:
-				insertStr += ', '
-			insertStr += paraList[index]
-		
-		insertStr += ') values ('
-		
-		for index in range(0,len(paraList),1):
-			if index != 0:
-				insertStr += ', '
-			insertStr += "%s"
-			insertedData += (getParams[paraList[index]],)
-		
-		insertStr += ')'
-		
-		try:
-		
-			# Connect to an existing database
-			conn = psycopg2.connect(self.__serverDSN())
-			
-			# Open a cursor to perform database operations
-			cur = conn.cursor()	 
-
-			# parameter-based insertion sql
-			cur.execute(insertStr,insertedData)
-
-			# get all data	
-			conn.commit()
-
-			# close communication
-			cur.close()
-			conn.close()
-		
-		except:
-			retStatus = 0
-		
-		return retStatus
-
-	# delete operation
-	# getConds : {}, where sql conditions
-	def delete(self, getConds):
-		# 0 : failure, 1 : success
-		retStatus = 1
-	
-		# filter the column value
-		condKeys = getConds.keys()
-		condList = []
-		selectedTuple = ()
-		
-		# check parameter existing
-		if len(condKeys) > 0:
-			for item in condKeys:	 
-				if self.__getColIndex(item) > -1:
-					condList.append(item)
-		else:
-			return retStatus
-
-		# no where condition
-		if len(condList) < 1:
-			return retStatus
-			
-		# delete string
-		deleteStr = "delete from " + self.__tb + " where "
-		
-		for index in range(0,len(condList),1):
-			if index != 0:
-				deleteStr += ' and '
-			deleteStr += condList[index] + " = " + "%s"
-			selectedTuple += (getConds[condList[index]],)
+            # close communication
+            cur.close()
+            conn.close()             
             
-		# delete transaction
-		try:
-		
-			# Connect to an existing database
-			conn = psycopg2.connect(self.__serverDSN())
-			
-			# Open a cursor to perform database operations
-			cur = conn.cursor()	 
+        return self.__retStatus
+                
+    #
+    # desc : select operation
+    # param@getConds : {}, defined where SQL conditions
+    # param@getParams : [], selected column names, empty : means all
+    # param@asdict : boolean, returned row as dictionary data type
+    # retn : data as [] type
+    # note : also support status object, use status()
+    #
+    def select(self, getConds, getParams, asdict=False):
+        # filter the column value
+        colSelected = "*"
+        colList = []
+        retdata = []
+        dataTuple = ()
+        
+        # check column existing
+        if len(getParams) > 0:
+            for item in getParams:        
+                if self.__getColIndex(item) > -1:
+                    colList.append(item)
+        
+        # set selected columns
+        if len(colList) > 0:
+            colSelected = ','.join(colList)
 
-			# parameter-based sql
-			cur.execute(deleteStr, selectedTuple)
+        try:
+                                
+            # Connect to an existing database
+            conn = psycopg2.connect(self.__serverDSN())
+            
+            # Open a cursor to perform database operations
+            cur = conn.cursor()
+    
+            # select sql
+            selectStr = "select " + colSelected + " from " + self.__tb
+    
+            if len(getConds.keys()) > 0:
+                selectStr += " where "
+                item = 0
+                for key, value in getConds.iteritems():
+                    if item != 0:
+                        selectStr += " and "
+                    selectStr += str(key) + "= %s "
+                    item += 1
+                    dataTuple += (value,)
+            selectStr += ";"                                                
+        
+            # parameter-based select sql
+            cur.execute(selectStr, dataTuple)
+    
+            # get all data    
+            rawdata = cur.fetchall()
+            
+            # modify data to customized type
+            if asdict:
+                if len(colList) > 0:
+                    for pair in rawdata:
+                        tmpDict = {}
+                        for item in range(0,len(pair),1):
+                            tmpDict.setdefault(colList[item],pair[item])
+                        retdata.append(tmpDict)
+                else:
+                    for pair in rawdata:
+                        tmpDict = {}
+                        for item in range(0,len(pair),1):
+                            tmpDict.setdefault(self.__columns[item],pair[item])
+                        retdata.append(tmpDict)
+            else:
+                retdata = rawdata
+                
+            # close communication
+            cur.close()
+            conn.close()          
+        
+            # set status
+            self.__setStatus("success", "Select operation succeeded.", retdata)
 
-			# get all data	
-			conn.commit()
+        except:
+            self.__setStatus("failure", "Select operation executed failed.", retdata)
+                                               
 
-			# close communication
-			cur.close()
-			conn.close()
-		
-		except:
-			retStatus = 0
-		
-		return retStatus
-		
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+        return retdata
+
+    #
+    # desc : update operation
+    # param@getParams : {}, set sql parameters    
+    # param@getConds : {}, where sql conditions
+    # retn : 0 : failure, 1 : success
+    # note : also support status object, use status()
+    #
+    def update(self, getParams, getConds):
+        # 0 : failure, 1 : success
+        retStatus = 1
+    
+        # filter the column value
+        paraKeys = getParams.keys()
+        condKeys = getConds.keys()
+        paraList = []
+        condList = []
+        dataTuple = ()
+        
+        # check parameter existing
+        if len(paraKeys) > 0:
+            for item in paraKeys:     
+                if self.__getColIndex(item) > -1:
+                    paraList.append(item)
+        else:
+            retStatus = 0
+            self.__setStatus("failure","Set SQL was checked in failure.",{})
+            return retStatus
+        
+        # check condition existing
+        if len(condKeys) > 0:
+            for item in condKeys:     
+                if self.__getColIndex(item) > -1:
+                    condList.append(item)
+        else:
+            retStatus = 0
+            self.__setStatus("failure","Where SQL was checked in failure.",{})
+            return retStatus
+
+        # update sql
+        updateStr = "update " + self.__tb + " set "
+        
+        if len(paraList) > 0:
+            paraListItem = []
+            for item in paraList:
+                paraListItem.append(item + "= %s ")
+                dataTuple += (getParams[item],)
+            updateStr += ' , '.join(paraListItem)
+        else:
+            retStatus = 0
+            self.__setStatus("failure","Set SQL was checked in failure.",{})
+            return retStatus
+            
+        updateStr += " where "
+
+        if len(condList) > 0:
+            condListItem = []
+            for item in condList:
+                condListItem.append(item + "= %s ")
+                dataTuple += (getConds[item],)
+            updateStr += ' and '.join(condListItem)
+        else:
+            retStatus = 0
+            self.__setStatus("failure","Where SQL was checked in failure.",{})
+            return retStatus
+        
+        updateStr += ";"                     
+
+        try:
+            # Connect to an existing database
+            conn = psycopg2.connect(self.__serverDSN())
+            
+            # Open a cursor to perform database operations
+            cur = conn.cursor()     
+    
+            # parameter-based update sql
+            cur.execute(updateStr, dataTuple)
+    
+            # get all data    
+            conn.commit()
+    
+            # close communication
+            cur.close()
+            conn.close()       
+            
+            self.__setStatus("success","Update operation succeeded.",{})
+            
+        except:      
+                                
+            retStatus = 0
+            self.__setStatus("failure","Update operation was executed in failure.",{})
+
+        return retStatus        
+        
+    #
+    # desc : insert operation
+    # param@getParams : {}, value sql parameters    
+    # retn : 0 : failure, 1 : success
+    # note : also support status object, use status()
+    #
+    def insert(self, getParams):
+        # 0 : failure, 1 : success
+        retStatus = 1
+    
+        # filter the column value
+        paraKeys = getParams.keys()
+        paraList = []
+        insertedData = ()
+        
+        # check parameter existing
+        if len(paraKeys) > 0:
+            for item in paraKeys:     
+                if self.__getColIndex(item) > -1:
+                    paraList.append(item)
+        else:
+            retStatus = 0
+            self.__setStatus("failure","Data parameter was empty.",{})
+            return retStatus
+            
+        # insert string
+        insertStr = "insert into " + self.__tb + " ("
+        
+        for index in range(0,len(paraList),1):
+            if index != 0:
+                insertStr += ', '
+            insertStr += paraList[index]
+        
+        insertStr += ') values ('
+        
+        for index in range(0,len(paraList),1):
+            if index != 0:
+                insertStr += ', '
+            insertStr += "%s"
+            insertedData += (getParams[paraList[index]],)
+        
+        insertStr += ')'
+        
+        try:
+        
+            # Connect to an existing database
+            conn = psycopg2.connect(self.__serverDSN())
+            
+            # Open a cursor to perform database operations
+            cur = conn.cursor()     
+
+            # parameter-based insertion sql
+            cur.execute(insertStr,insertedData)
+
+            # get all data    
+            conn.commit()
+
+            # close communication
+            cur.close()
+            conn.close()
+            
+            self.__setStatus("success","Insert operation succeeded.",{})
+        
+        except:
+            self.__setStatus("failure","Insert operation was executed in failure.",{})
+            retStatus = 0
+        
+        return retStatus
+
+    #
+    # desc : delete operation
+    # param@getConds : {}, where sql conditions
+    # retn : 0 : failure, 1 : success
+    # note : also support status object, use status()
+    #
+    def delete(self, getConds):
+        # 0 : failure, 1 : success
+        retStatus = 1
+    
+        # filter the column value
+        condKeys = getConds.keys()
+        condList = []
+        selectedTuple = ()
+        
+        # check parameter existing
+        if len(condKeys) > 0:
+            for item in condKeys:     
+                if self.__getColIndex(item) > -1:
+                    condList.append(item)
+        else:
+            retStatus = 0
+            self.__setStatus("failure","Where parameter was empty.",{})
+            return retStatus
+
+        # no where condition
+        if len(condList) < 1:
+            retStatus = 0
+            self.__setStatus("failure","Value in where parameter was empty.",{})
+            return retStatus
+            
+        # delete string
+        deleteStr = "delete from " + self.__tb + " where "
+        
+        for index in range(0,len(condList),1):
+            if index != 0:
+                deleteStr += ' and '
+            deleteStr += condList[index] + " = " + "%s"
+            selectedTuple += (getConds[condList[index]],)
+            
+        # delete transaction
+        try:
+        
+            # Connect to an existing database
+            conn = psycopg2.connect(self.__serverDSN())
+            
+            # Open a cursor to perform database operations
+            cur = conn.cursor()     
+
+            # parameter-based sql
+            cur.execute(deleteStr, selectedTuple)
+
+            # get all data    
+            conn.commit()
+
+            # close communication
+            cur.close()
+            conn.close()
+            
+            self.__setStatus("success","Delete operation succeeded.",{})
+        
+        except:
+            self.__setStatus("failure","Delete operation was executed in failure.",{})
+            retStatus = 0
+        
+        return retStatus
+
+    #
+    # desc : execute complex sql command
+    # param@getSQL : parameter-based complex sql command
+    # e.g. "select * from public.user where name = %(name)s;"
+    # param@hasRetValue : are there returned values ?
+    # param@getParams : {}
+    # e.g. {'name' : "test114"}
+    # param@asdict : only works when param@hasRetValue is true, returned value as dictionary data type
+    # retn : return executing status
+    #
+    def execsql(self, getSQL, hasRetValue, getParams, asdict=True):
+        # save returned data as dictionary data type
+        retData = []
+        
+        # check data type is allowed
+        if not isinstance(getParams, dict):
+            self.__setStatus("failure", "Parameters must be as dictionary type.", {})
+            return
+        
+        try:
+            # connect to db       
+            conn = psycopg2.connect(self.__serverDSN())
+        except:
+            self.__setStatus("failure", "Can not connect to db.", {})
+            return
+
+        try:
+            # Open a cursor to perform database operations
+            cur = conn.cursor()
+        
+            # parameter-based select sql
+            cur.execute(getSQL, getParams)
+        except:
+            self.__setStatus("failure", "SQL was executed in failure.", {})
+            return
+        
+        rawdata = {}
+        try:
+            if hasRetValue:
+                # select
+                
+                # get columns
+                execColumns = self.__getCurDesc(cur, 0)
+                
+                # get all data	
+                rawdata = cur.fetchall()
+                
+                if asdict:
+                    # set transform tuple data type into dictionary data type
+                    tmp = {}
+                    for item in range(0, len(rawdata), 1):
+                        tmp = {}
+                        for col in range(0, len(execColumns), 1):
+                            tmp.setdefault(execColumns[col], rawdata[item][col])
+                        retData.append(tmp)
+            else:
+                # insert, delete, update
+                conn.commit()
+            
+            # close communication
+            cur.close()
+            conn.close()
+
+        except:
+            self.__setStatus("failure", "Data can not be queried or SQL command can not be executed.", {})
+            return
+
+        if hasRetValue:
+            if asdict:
+                self.__setStatus("success", "SQL command was executed.", retData)
+            else:
+                self.__setStatus("success", "SQL command was executed.", rawdata)
+        else:
+            self.__setStatus("success", "SQL command was executed.", {})
+        return	
+
+    def example():
+        pass
+    
+    
+    
+    
+    
+    
+    
