@@ -10,39 +10,66 @@
 # link to postgresql database
 # p2l = py2psql("127.0.0.1","5432","ckan_default","public.user","ckan_default","ckan")
 #
-# get table schema
+# returned status : call status()
+# { "state" : [success|failure|warning], "info" : "message", "data" : []}
+#
+# example.1 get table schema
+# 1.1
 # p2l = py2psql("127.0.0.1","5432","ckan_default","public.user","ckan_default","ckan")
-# p2l.getTableSchema()  # default table
+# p2l.getTableSchema()  # default table, only fetches column name(desc[0])
+# 1.2
 # p2l2 = py2psql("127.0.0.1","5432","ckan_default","","ckan_default","ckan")
-# p2l2.getTableSchema("public.user")  # desired table
+# p2l2.getTableSchema("public.user",0)  # desired table
+# p2l2.getTableSchema("public.user",-1)  # fetch all description
 # p2l.status()
 #
-# query data and select column name, email, 123 (not existing)
+# example.2 query data
+# 2.1 select column name, email, 123 (not existing)
 # data = p2l.select({where},[columns])
 # data = p2l.select({"name":"test114"},["name","email","123"])
 # data = p2l.select({"name":"test114"},[])
-#
-# query data and select column name, email, 123 (not existing) and also returned as dictionary
+# 2.2 select column name, email, 123 (not existing) and also returned as dictionary
 # data = p2l.select({where},[columns],asdict=True)
 # data = p2l.select({"name":"test114"},["name","email","123"],asdict=True)
 # data = p2l.select({"name":"test114"},[],asdict=True)
 #
-# update data
+# example.3 update data
+# 3.1
 # p2l.update({set},{where})
 # p2l.update({"email":"test@tw"},{"name":"test114"})
 #
-# insert data
+# example.4 insert data
+# 4.1
 # p2l.insert({ data })
 # p2l.insert({ "id" : "acbdhcbdh-abchdbch", "name":"123","email":"123@tw" })
 #
-# delete data
+# example.5 delete data
+# 5.1
 # p2l.delete({where})
 # p2l.delete({"name":"test1", "email":"test1@tw"})
 #
-# execsql data
-# create object without assign table
+# example.6 execsql data
+# 6.1 only one function can create object without assigning table
 # p2l.execsql("sql command", is there returned value, {parameter : value})
 # p2l.execsql("select * from public.user where name = %(name)s;", True, {'name' : "test114"}, True)
+# p2l.status()
+# 6.2 get table list
+# p2l.execsql("select * from information_schema.tables where table_name = %(name)s;", True, {'name' : "user"})
+# p2l.status()
+#
+# example.7 create data table
+# 7.1 drop first
+# p2l.createTable("test", {"id" : "serial primary key", "context" : "text not null"}, dropFirst=True)
+# p2l.status()
+#
+# example.8 alter data table
+# 8.1 
+# p2l.alterTable("test", {"context" : "text"}, createTableFirstIfNotExisted=False, addColIfNotExisted=False, theSameWithThisSchema=True)
+# p2l.status()
+#
+# example.9 drop data table
+# 9.1
+# p2l.dropTable("test")
 # p2l.status()
 #
 
@@ -194,9 +221,10 @@ class py2psql:
     #
     # desc : get table schema
     # param@getTable : get desired table schema
+    # param@descIndex : description index of table schema, -1 : means all
     # retn : status object
     #
-    def getTableSchema(self, getTable=None):    
+    def getTableSchema(self, getTable=None, descIndex=0):    
         if self.__tb == "" and getTable == None:
             self.__setStatus("failure","There is no table assigned.",{})
         elif self.__tb != "" and getTable == None:
@@ -218,9 +246,12 @@ class py2psql:
             try:
                 cur.execute(selectStr)
         
-                # get columns
-                getColName = [desc[0] for desc in cur.description]
-                self.__setStatus("success","Get the table schema.", getColName)
+                # get columns desc
+                if descIndex < 0:
+                    getColDesc = [desc for desc in cur.description]
+                else:
+                    getColDesc = [desc[descIndex] for desc in cur.description]
+                self.__setStatus("success","Get the table schema.", getColDesc)
             except:
                 self.__setStatus("failure","Can not get the table schema.", {})
 
@@ -618,8 +649,214 @@ class py2psql:
             self.__setStatus("success", "SQL command was executed.", {})
         return	
 
-    def example():
-        pass
+    #
+    # desc : create table based on schema
+    # param@tableName : name of the table for creation
+    # param@tableSchema : { 'colName' : 'colSchema', '' : '' }
+    # param@dropFirst : whether to drop table first if it exists
+    # retn : status object
+    #
+    def createTable(self, tableName, tableSchema, dropFirst=False):
+        
+        if not (isinstance(tableSchema, dict)):
+            self.__setStatus("failure", "Parameters are not correct.", {})
+            return
+            
+        # check table status (whether it exists or not)
+        try:
+            self.execsql("select * from information_schema.tables where table_name = %(name)s;", True, {'name' : tableName})
+        except:
+            self.__setStatus("failure", "Can not get the table list.", {})
+            return
+            
+        if self.__retStatus["state"] != "success":
+            self.__setStatus("failure", "Can not check table status.", {})
+            return
+        
+        if len(self.__retStatus["data"]) > 0:
+            # table already exists
+            if dropFirst:
+                # delete first
+                self.execsql("drop table if exists " + tableName + ";", False, {})
+                
+                if self.__retStatus["state"] != "success":
+                    self.__setStatus("failure", self.__setStatus["data"] + " Can not drop the data table.", {})
+                    
+            else:
+                self.__setStatus("failure", "The table already exists, if it does not drop, the table can not be created.", {})
+                return
+
+        # create table
+        tmpKey = tableSchema.keys()
+        createTBCmd = "create table if not exists " + tableName + " ( "
+        for colIndex in range(0, len(tmpKey), 1):
+            if colIndex != 0:
+                createTBCmd += ', '
+            createTBCmd += tmpKey[colIndex] + " " + tableSchema[tmpKey[colIndex]]
+        createTBCmd += " );"
+            
+        try:
+            self.execsql(createTBCmd, False, {})
+        except:
+            self.__setStatus("failure", "Unexcepted error on creating the data table.", {})
+            return
+        
+        if self.__retStatus["state"] != "success":
+            self.__setStatus("failure", "Can not create data table.", {})
+            return
+        else:
+            self.__setStatus("success", "Create data table successfully.", {})
+
+    #
+    # desc : alter table schema
+    # param@tableName : table for altering
+    # param@tableSchema : { 'colName' : 'new col schema' }
+    # param@createTableFirstIfNotExisted : whether to create table first if table does not exist
+    # param@addColIfNotExisted : whether to add column if it does not exist
+    # param@theSameWithThisSchema : whether to fit the table with the input schema
+    # retn : status object
+    # note : if addColIfNotExisted == False, the column for altering would be skipped 
+    #
+    def alterTable(self, \
+                   tableName, \
+                   tableSchema, \
+                   createTableFirstIfNotExisted=True, \
+                   addColIfNotExisted=True,\
+                   theSameWithThisSchema=True):
+        
+        if not (\
+                isinstance(tableName, str) and \
+                isinstance(tableSchema, dict) and\
+                isinstance(createTableFirstIfNotExisted, bool) and\
+                isinstance(addColIfNotExisted, bool)
+               ):
+            self.__setStatus("failure", "Parameters are not correct.", {})
+            return    
+    
+        # check table status (whether it exists or not)
+        try:
+            self.execsql("select * from information_schema.tables where table_name = %(name)s;", True, {'name' : tableName})
+        except:
+            self.__setStatus("failure", "Can not get the table list.", {})
+            return
+            
+        if self.__retStatus["state"] != "success":
+            self.__setStatus("failure", "Can not check table status.", {})
+            return
+        
+        # table does not exist
+        if len(self.__retStatus["data"]) < 1:
+            if createTableFirstIfNotExisted:
+                # create table first
+                self.createTable(tableName, tableSchema, False)
+                
+                if self.__retStatus["state"] != "success":
+                    self.__setStatus("failure", self.__setStatus["data"] + " Can not create the data table.", {})
+                    return
+            else:
+                self.__setStatus("failure", "The table does not exist, if it does not be created, the alter operation would be stop.", {})
+                return
+        # table exists
+        else:
+            # get table column name
+            crtColName = self.getTableSchema(tableName, 0)['data']
+            
+            warningFlag = 0
+            warningMsg = ""
+            for name, schema in tableSchema.iteritems():
+                if name in crtColName:
+                    # the same column name
+                    self.execsql(\
+                        "alter table " + tableName + " alter column " + name + " type " + schema + " ;",
+                        False,
+                        {},
+                        False
+                    )
+                    
+                    if self.__retStatus["state"] != "success":
+                        warningFlag = 1
+                        warningMsg = warningMsg + ' [alter column failure]' + self.__retStatus["info"]
+
+                    # remove the column from the list
+                    # the left column in the list may be dropped
+                    crtColName.remove(name)
+                else:
+                    # there is no existing column
+                    if addColIfNotExisted:
+                        self.execsql(\
+                            "alter table " + tableName + " add column " + name + " " + schema + " ;",
+                            False,
+                            {},
+                            False
+                        )
+                        
+                        if self.__retStatus["state"] != "success":
+                            warningFlag = 1
+                            warningMsg = warningMsg + ' [add column failure]' + self.__retStatus["info"]
+                    else:
+                        warningFlag = 1
+                        warningMsg = warningMsg + ' [not to add column] The column ' + name + ' does not exist and also not to create if it does not exist.'
+            
+            # drop the other column 
+            if theSameWithThisSchema:
+                for colName in crtColName:
+                    self.execsql(\
+                            "alter table " + tableName + " drop column if exists " + colName + " ;",
+                            False,
+                            {},
+                            False
+                        )
+
+                    if self.__retStatus["state"] != "success":
+                        warningFlag = 1
+                        warningMsg = warningMsg + ' [drop column failure] ' + colName + ' ' + self.__retStatus["info"]
+            
+            if warningFlag == 1:
+                self.__setStatus("warning",warningMsg,{})
+            else:
+                self.__setStatus("success","Alter table completely.",{})
+    
+    #
+    # desc : drop table
+    # param@tableName : table for droping
+    # retn : status object
+    #
+    def dropTable(self, tableName):
+        if not (isinstance(tableName, str)):
+            self.__setStatus("failure", "Parameters are not correct.", {})
+            return    
+    
+        # check table status (whether it exists or not)
+        try:
+            self.execsql("select * from information_schema.tables where table_name = %(name)s;", True, {'name' : tableName})
+        except:
+            self.__setStatus("failure", "Can not get the table list.", {})
+            return
+            
+        if self.__retStatus["state"] != "success":
+            self.__setStatus("failure", "Can not check table status.", {})
+            return
+
+        if len(self.__retStatus["data"]) > 0:
+            # table exist
+            self.execsql("drop table if exists " + tableName + ";", False, {}, False)
+            
+            if self.__retStatus["state"] == "success":
+                self.__setStatus("success", "Drop table " + tableName + " successfully.", {})
+            else:
+                self.__setStatus("failure", "Can not drop table " + tableName + ".", {})
+        else:
+            # table does not exist
+            self.__setStatus("success", "Table " + tableName + " does not exist.", {})
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
