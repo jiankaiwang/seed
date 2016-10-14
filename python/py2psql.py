@@ -654,7 +654,7 @@ class py2psql:
     # param@tableName : name of the table for creation
     # param@tableSchema : { 'colName' : 'colSchema', '' : '' }
     # param@dropFirst : whether to drop table first if it exists
-    # retn : status object
+    # retn : None, call status() to get status object
     #
     def createTable(self, tableName, tableSchema, dropFirst=False):
         
@@ -714,7 +714,7 @@ class py2psql:
     # param@createTableFirstIfNotExisted : whether to create table first if table does not exist
     # param@addColIfNotExisted : whether to add column if it does not exist
     # param@theSameWithThisSchema : whether to fit the table with the input schema
-    # retn : status object
+    # retn : None, call status() to get status object
     # note : if addColIfNotExisted == False, the column for altering would be skipped 
     #
     def alterTable(self, \
@@ -751,7 +751,7 @@ class py2psql:
                 self.createTable(tableName, tableSchema, False)
                 
                 if self.__retStatus["state"] != "success":
-                    self.__setStatus("failure", self.__setStatus["data"] + " Can not create the data table.", {})
+                    self.__setStatus("failure", self.__retStatus["info"] + " Can not create the data table.", {})
                     return
             else:
                 self.__setStatus("failure", "The table does not exist, if it does not be created, the alter operation would be stop.", {})
@@ -819,7 +819,7 @@ class py2psql:
     #
     # desc : drop table
     # param@tableName : table for droping
-    # retn : status object
+    # retn : None, call status() to get status object
     #
     def dropTable(self, tableName):
         if not (isinstance(tableName, str)):
