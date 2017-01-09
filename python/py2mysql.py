@@ -172,7 +172,9 @@ class py2mysql:
                 
                 return self.__retStatus("success", "Complete non-query sql command.", "")
                 
-            
+            cursor.close()
+            conn.close()
+                
         except mysql.connector.Error as err:
             return self.__retStatus("failure", "{}".format(err), "")
         
