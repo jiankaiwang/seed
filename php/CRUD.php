@@ -37,7 +37,7 @@ class CRUD {
     private function preHeader() {
         $retStr = array();
         foreach(array_keys($this -> header) as $key) {
-            $headerStr = "$key : ".$this -> header[$key];
+            $headerStr = "$key:".$this -> header[$key];
             array_push($retStr, $headerStr);
         }
         return $retStr;
