@@ -90,3 +90,50 @@ function setHourMinuteSecond(getDate, getHMS) {
     tmpDate.setSeconds(parseInt(hmsList[2]));
     return tmpDate;
 }
+
+/*
+ * desc : format seconds to DD:HH:MM:SS
+ */
+function formatSecond(second, format) {
+	var rawSeconds = second;
+	var days = Math.floor(rawSeconds / 86400);
+	rawSeconds -= days * 86400;
+	var hours = Math.floor(rawSeconds / 3600);
+	rawSeconds -= hours * 3600;
+	var minutes = Math.floor(rawSeconds / 60);
+	rawSeconds -= minutes * 60;
+	var seconds = parseInt(rawSeconds % 60);
+	
+	switch(format) {
+		case "H":
+			return hours;
+		case "HH":
+			return (hours < 10 ? '0' + hours : hours);
+		case "M":
+			return minutes;
+		case "MM":
+			return (minutes < 10 ? '0' + minutes : minutes);
+		case "S":
+			return seconds;
+		case "SS":
+			return (seconds < 10 ? '0' + seconds : seconds);			
+		default:
+		case "dd:HH:MM:SS":
+			return days + ':' + (hours < 10 ? '0' + hours : hours) + ':' + (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
+		case "HH:MM:SS":
+			return hours + ':' + (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
+		case "MM:SS":
+			return minutes + ':' + (seconds < 10 ? '0' + seconds : seconds);
+	}
+}
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
