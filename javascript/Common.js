@@ -85,7 +85,27 @@ var getKeyBySortOnValue = function(getDictObj, sortType, getOrder, getListCount)
 	return retKeyList;
 }
 
-
+/*
+ * desc : return all index in the list which their values are the same with the given value
+ * inpt :
+ * |- getList : the searching list
+ * |- getItem : the searching item
+ * retn : a list containing the index
+ * e.g. : allItemIndexinList([1,2,3,3,4], 3);  // return [2,3]
+ */
+var allItemIndexinList = function(getList, getItem) {
+	var retList = [];
+	var count = 0;
+	
+	getList.forEach(function(data) {
+	  if(data == getItem) {
+			retList.push(count);
+		}
+		count += 1;
+	});
+	
+	return retList;
+}
 
 
 
