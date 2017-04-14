@@ -107,6 +107,22 @@ var allItemIndexinList = function(getList, getItem) {
 	return retList;
 }
 
+/*
+ * desc : return the list which elements are duplicated
+ * inpt :
+ * |- getList : the list 
+ * retn : the list with the non-duplicated element
+ */
+var uniqueList = function(getList) {
+	var retList = [];
+	for(var i = 0 ; i < getList.length ; i++) {
+		if(retList.indexOf(getList[i]) < 0) {
+			retList.push(getList[i]);
+		}
+	}
+	return retList;
+}
+
 
 
 
