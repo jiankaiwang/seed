@@ -11,7 +11,8 @@ namespace std {
     int data[] = {1, -1, 2, 5, -3, 5, 7, 9, -10, 10};
     quicksort(data, 0, 10);
     */
-    void quicksort(int array_data[], int left, int right) {
+    template<class T>
+    void quicksort(T array_data[], int left, int right) {
         /*
         pivot : is the compare standard, is also the first number of the sequence
         i : find the larger number than the pivot from left to right, and is not the boundary
@@ -58,7 +59,8 @@ namespace std {
     int data[] = {-10 -3 -2 -1 1 2 5 5 7 9};
     binarysearch(data, 7, 0, 10);   // return : 8
     */
-    int binarysearch(int array_data[], int search_number, int left_b, int right_b) {
+    template<class T>
+    int binarysearch(T array_data[], T search_number, int left_b, int right_b) {
         // middle : the middle number in the searching sequence
         int middle(0);
 
