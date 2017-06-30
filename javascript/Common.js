@@ -123,8 +123,15 @@ var uniqueList = function(getList) {
 	return retList;
 }
 
-
-
+/*
+ * desc : count byte length of the UTF8 string
+ * inpt :
+ * |- getStr : a UTF-8 encoding string
+ * retn : a number
+ */
+var byteCount = function(getStr) {
+    return encodeURI(getStr).split(/%..|./).length - 1;
+}
 
 
 
