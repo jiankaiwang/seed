@@ -13,16 +13,18 @@ Provide libraries or packages for the software development in multiple programmi
 
 * Scientific
 	* R : 3.2.3
-* Webpage
+* Web
 	* Javascript : ES6
+	* Typescript : 1.8.9
 	* PHP : 5.4.x
+	* Nodejs : 6.9.1
 * Dynamic
 	* Perl : 5.22.1
-	* Python : 2.7.x
+	* Python : 2 / 3
 * Static
 	* C++ : 11
 	* Csharp : 4.0 \(.NET Framework 4.5.2\)
-	* Java : jdk1.7.5
+	* Java : 7 / 8
 
 ### Seed Modules
 ---
@@ -39,6 +41,7 @@ Provide libraries or packages for the software development in multiple programmi
 	* hash
 	* Asymmetric Encryption
 * Network
+	* IPv4 Address upon the mask
 * Web
 	* Request Method
 	* Web API
@@ -46,4 +49,6 @@ Provide libraries or packages for the software development in multiple programmi
 * Database
 	* MySQL
 	* PostgreSQL
+	* Redis
+* GIS
 

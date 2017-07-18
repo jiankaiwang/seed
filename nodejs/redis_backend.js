@@ -18,23 +18,27 @@
 setRedisConf({ "host" : "127.0.0.1", "port" : "6379", "pwd" : "exampleRedisPWD" });
 
 // operation 1-1 : set key-value pair
-setRedisPair("key-1","val-1");
+setRedisPair("key-1", "val-1", function(data) { console.log(data); });
 
 // operation 1-2 : get value by key
-getRedisPair("key-1", function(data) { console.log("callBack function to get value " + data); });
+getRedisPair("key-1", function(data) { console.log(data); });
 
 // operation 1-3 : delete value by key
-delRedisPair("key-1");
+delRedisPair("key-1", function(data) { console.log(data); });
 
 // operation 2 : auto process API
+// GET example :
+// |- https://api.com/?s=service1&v=api1
+// |- https://api.com/?s=service1&v=api2
+// |- https://api.com/?s=service2&v=api1
 autoProcessAPI(
-  {
-	  "apiUrl" : "https://api.com/", 
+	{
+		"apiUrl" : "https://api.com/",
 		"apiService" : {
 			"service1" : ["api1", "api2"],
 			"service2" : ["api1"]
 		}
-  }
+	}
 );
 
  * ref : 
@@ -51,7 +55,7 @@ var redis = require("redis"),
     url = require("url"),
     querystring = require('querystring'),
     request = require('request'),
-    common = require('./public/seed/Common.js');
+    common = require('../public/seed/Common.js');
 
 /*
  * desc : response the result 
@@ -63,17 +67,18 @@ function responseResult(state, info, data) {
 /*
  * desc : connect to the redis and set the key-value pair 
  */
-function setRedisPair(key, value) {
+function setRedisPair(key, value, callBackFunc) {
 	var client = redis.createClient({ host: redisHost, port: redisPort, password: redisPWD });
 	
 	// connection error
 	client.on("error", function(error) {
-	    console.log('info', responseResult("failure","Connecting to the Redis went error.",error));
+		callBackFunc(responseResult("failure","Connecting to the Redis went error.",error));
 	});
 
 	// save into the Redis
 	client.on('connect', function() {
 	    client.set(key, value);
+	    callBackFunc(responseResult("success","set the pair",""));
         // close the connection
     	client.quit();
 	});
@@ -87,19 +92,19 @@ function getRedisPair(key, callBackFunc) {
 	
 	// connection error
 	client.on("error", function(error) {
-	    console.log('info', responseResult("failure","Connecting to the Redis went error.",error));
-	    callBackFunc("error: Connecting to the Redis went error.");
+		callBackFunc(responseResult("failure","Connecting to the Redis went error.",error));
 	});
 
 	// save into the Redis
 	client.on('connect', function() {
 	    client.get(key, function(err, reply) {
 	    	if(!err) {
-	    		callBackFunc(reply);
+	    		callBackFunc(responseResult("success","operation get on the redis",reply));
 	    	} else {
-	    		callBackFunc("error: operation get on the redis");
+	    		callBackFunc(responseResult("failure","operation get on the redis",""));
 	    	}
 	    })
+	    
         // close the connection
     	client.quit();
 	});
@@ -108,18 +113,19 @@ function getRedisPair(key, callBackFunc) {
 /*
  * desc : connect to the redis and delete the value by key 
  */
-function delRedisPair(key) {
+function delRedisPair(key, callBackFunc) {
 	var client = redis.createClient({ host: redisHost, port: redisPort, password: redisPWD });
 	
 	// connection error
 	client.on("error", function(error) {
-	    console.log('info', responseResult("failure","Connecting to the Redis went error.",error));
+		callBackFunc(responseResult("failure","Connecting to the Redis went error.",error));
 	});
 
 	// save into the Redis
 	client.on('connect', function() {
 	    client.del(key, function(err, reply) {
-	    	if(err) { console.log("error: operation delete on the redis"); }
+	    	if(err) { callBackFunc(responseResult("failure","operation delete on the redis",reply)); }
+	    	else { callBackFunc(responseResult("success","operation delete on the redis","")); }
 	    })
         // close the connection
     	client.quit();
@@ -135,7 +141,7 @@ function __request(apiURI, allQueries) {
 	apiURI + "?s=" + allQueries["s"] + "&v=" + allQueries["v"]
   , function (error, response, body) {
     if (!error) {
-    	setRedisPair(allQueries["s"] + allQueries["v"], body);
+    	setRedisPair(allQueries["s"] + allQueries["v"], body, function() {});
     } else {
         console.log('info', responseResult("failure","Access the API went error.",""));
     }
@@ -144,6 +150,8 @@ function __request(apiURI, allQueries) {
 
 /*
  * desc : set redis server conf 
+ * inpt :
+ * |-  redis : {"host" : "127.0.0.1", "port" : "6379", "pwd" : "exampleRedisPWD" }
  */
 function setRedisConf(redis) {
 	redisHost = redis["host"];
@@ -154,7 +162,6 @@ function setRedisConf(redis) {
 /*
  * desc : query the api and save the data
  * inpt :
- * |- redis : {"host" : "127.0.0.1", "port" : "6379", "pwd" : "exampleRedisPWD" }
  * |- api : {"apiUrl" : "url", "apiService" : { "service1" : ["api1", "api2"], "service2" : ["api1"] }}
  */
 function autoProcessAPI(api) {
