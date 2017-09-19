@@ -6,7 +6,6 @@
 
 # coding: utf-8
 
-import urllib2
 import json
 import requests
 import TEXTCODING
@@ -48,7 +47,7 @@ class SENDREQUEST:
             req = requests.get(ttlUrl, headers = self.__addHeader)
             self.__response = req.text
             self.__state = 0
-        except urllib2.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             self.__response = e
             self.__state = 1
         except:
@@ -65,7 +64,7 @@ class SENDREQUEST:
             req = requests.post(self.__url, json = TEXTCODING.unicode2utf8FromDict(self.__jsonData), headers = self.__addHeader)
             self.__response = req.text
             self.__state = 0
-        except urllib2.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             self.__response = e
             self.__state = 1
         except:
@@ -88,7 +87,7 @@ class SENDREQUEST:
                 req = requests.delete(self.__url, headers = self.__addHeader)
                 self.__response = req.text
             self.__state = 0
-        except urllib2.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             self.__response = e
             self.__state = 1
         except:
