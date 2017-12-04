@@ -32,6 +32,7 @@ if py2sqlserver.validateConnection()['state'] == "success":
         ("data1",)\
     ))
     print(py2sqlserver.queryBySQLcmd("SELECT * from dbo.example;", ()))
+    print(py2sqlserver.getColumnNames("SELECT * from dbo.example;", ()))
 """
 
 import pyodbc
@@ -80,6 +81,20 @@ class py2SQLServer:
         else:
             state = "failure"
         return self.__retStatus(state, self.__msg, "")
+    
+    def getColumnNames(self, sqlCmd, SqlParas):
+        if self.__vaild:
+            try:
+                cnxn = pyodbc.connect(self.__dsn)
+                cursor = cnxn.cursor()
+                cursor.execute(sqlCmd, SqlParas)
+                curInfo = [desc[0] for desc in cursor.description]
+                cnxn.close()
+                return self.__retStatus("success", "The operation to fetch column names is complete.", curInfo)
+            except:
+                return self.__retStatus("failure", "The operation to fetch column names failed.", "")
+        else:
+            return self.__retStatus("failure", "The connection is not validated.", "")
         
     def queryBySQLcmd(self, sqlCmd, SqlParas):
         if self.__vaild:
