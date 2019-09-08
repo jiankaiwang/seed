@@ -25,6 +25,8 @@ Provide libraries or packages for the software development in multiple programmi
 	* C++ : 11
 	* Csharp : 4.0 \(.NET Framework 4.5.2\)
 	* Java : 7 / 8
+	* Golang
+	* Swift
 
 ### Seed Modules
 ---
