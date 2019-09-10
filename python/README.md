@@ -46,3 +46,11 @@
 ##  LineNotify.py
 
 * Send the message, the sticker, and the image to the specific LINE group.
+
+
+
+
+## TF1_FrozenModel.py 
+
+*   We provided several useful tools for using TF frozen model, including listing operations, listing nodes, transforming the model into tflite one, etc. We hope this script can bring you easier way access to the portable model.
+*   Dependency: tensorflow (>= 1.13.2)
