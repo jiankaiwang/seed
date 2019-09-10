@@ -1,15 +1,7 @@
 # seed
 Provide libraries or packages for the software development in multiple programming languages.
 
-
-
-### API document
----
-
-* [Gitbook Reference](https://www.gitbook.com/book/jiankaiwang/seed)
-
-### Supported languages list
----
+## Supported languages list
 
 * Scientific
 	* R : 3.2.3
@@ -20,7 +12,7 @@ Provide libraries or packages for the software development in multiple programmi
 	* Nodejs : 6.9.1
 * Dynamic
 	* Perl : 5.22.1
-	* Python : 2 / 3
+	* Python : 2.x / 3.x
 * Static
 	* C++ : 11
 	* Csharp : 4.0 \(.NET Framework 4.5.2\)
@@ -28,8 +20,7 @@ Provide libraries or packages for the software development in multiple programmi
 	* Golang
 	* Swift
 
-### Seed Modules
----
+## Seed Modules
 
 * General
 * File System
@@ -53,6 +44,7 @@ Provide libraries or packages for the software development in multiple programmi
 	* PostgreSQL
 	* Redis
 * GIS
-
 * Social
-  * Line Notify
+	* Line Notify
+* Deep Learning
+	* TF Frozen Model API
