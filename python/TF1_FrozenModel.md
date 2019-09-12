@@ -69,6 +69,19 @@ class OperateFrozenModel:
       state: True or False
       Message: Output Directory (for True) or Message (for False)
     """
+    
+  @staticmethod
+  def write_graph_for_tfboard(pb_path, logdir_path):
+    """Write out the frozen graph into the logdir for visualization on TFBoard.
+
+    Args:
+      pb_path: the path to a frozen model
+      logdir_path: the folder path further monitored by Tensorboard
+
+    Returns:
+      state: True or False
+      Message: Output directory (for True) or Message (for False)
+    """
 ```
 
 

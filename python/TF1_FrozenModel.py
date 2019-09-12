@@ -113,6 +113,29 @@ class OperateFrozenModel:
     except Exception as e:
       return False, str(e)
 
+  @staticmethod
+  def write_graph_for_tfboard(pb_path, logdir_path):
+    """Write out the frozen graph into the logdir for visualization on TFBoard.
+
+    Args:
+      pb_path: the path to a frozen model
+      logdir_path: the folder path further monitored by Tensorboard
+
+    Returns:
+      state: True or False
+      Message: Output directory (for True) or Message (for False)
+    """
+    try:
+      state, graph = OperateFrozenModel.load_frozen_model(pb_path)
+      if not state: raise Exception(graph)
+      if not tf.gfile.Exists(logdir_path):
+        os.makedirs(logdir_path)
+      writer = tf.summary.FileWriter(logdir=logdir_path)
+      writer.add_graph(graph)
+      return True, logdir_path
+    except Exception as e:
+      return False, str(e)
+
 # In[]
 
 class GraphOperations:
@@ -337,7 +360,12 @@ if __name__ == "__main__":
   print(operators)
   print("----------\n")
 
-
+  print("\n----------")
+  print("Write graph for visualization via TFBoard.")
+  logdir_path = "/Users/jiankaiwang/Desktop/logs"
+  state, error = OperateFrozenModel.write_graph_for_tfboard(pb_path, logdir_path)
+  assert state, "Error in writing out frozen graph: {}.".format(error)
+  print("----------\n")
 
 
 
